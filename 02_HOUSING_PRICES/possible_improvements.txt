@@ -18,18 +18,19 @@ Last updated: 2026-06-12
 2. FEATURE ENGINEERING
 -----------------------
 - Total area: combine basement, 1st floor, and 2nd floor areas into a single
-  TOTALLIVINGSF feature; high individual correlations suggest strong joint signal.
+  TOTALLIVINGSF feature; high individual correlations suggest strong joint signal. ✅
 
 - Age features: derive HOUSE_AGE = YRSOLD - YEARBUILT and REMODEL_AGE = YRSOLD -
-  YEARREMODADD. These relative ages are more predictive than raw years.
-- Garage capacity proxy: GARAGECARS * GARAGEAREA can capture both size and count.
+  YEARREMODADD. These relative ages are more predictive than raw years.✅
 
-- Bathroom index: FULLBATH + 0.5*HALFBATH + 0.5*BSMTFULLBATH as a weighted total.
+- Garage capacity proxy: GARAGECARS * GARAGEAREA can capture both size and count. ✅
+
+- Bathroom index: FULLBATH + 0.5*HALFBATH + 0.5*BSMTFULLBATH as a weighted total. ✅
 
 - Has-feature flags: binary columns for HASBASEMENT, HASGARAGE, HASFIREPLACE,
-  HASPOOL derived from area/count columns being > 0.
+  HASPOOL derived from area/count columns being > 0.✅
   
-- Porch total: sum OPENPORCHSF + SCREENPORCH + 3SSNPORCH into one TOTALPORCHSF.
+- Porch total: sum OPENPORCHSF + SCREENPORCH + 3SSNPORCH into one TOTALPORCHSF.✅
 
 
 3. DROPPED COLUMNS — WORTH RECONSIDERING
@@ -37,10 +38,13 @@ Last updated: 2026-06-12
 - NEIGHBORHOOD: dropped due to high cardinality, but it encodes strong location
   signal. Consider target-encoding (mean SALEPRICE per neighborhood) with proper
   cross-validation folds to avoid data leakage.
+
 - CONDITION1/NOISE: dropped after label-encoding showed low correlation. A
   target-encoded version, or a simpler binary NEAR_ROAD flag, might recover signal.
+
 - MOSOLD / YRSOLD: dropped because individual correlations are weak, but a combined
   DATE_SOLD (e.g. YRSOLD + MOSOLD/12) might reveal seasonal or market-cycle trends.
+  
 - MSSUBCLASS: currently dropped; could be grouped into broader dwelling types
   (e.g. old/new single-family, townhouse) to reduce cardinality.
 
@@ -101,7 +105,7 @@ Last updated: 2026-06-12
 -----------------
 - '1STFLRSF', '2NDFLRSF', '3SSNPORCH' start with digits, which can break some
   sklearn pipelines and SQL-like operations. Rename to FIRSTFLRSF, SECONDFLRSF,
-  THREESSNPORCH (or prefix with COL_).
+  THREESSNPORCH (or prefix with COL_). ✅
 
 
 10. PIPELINE & REPRODUCIBILITY
