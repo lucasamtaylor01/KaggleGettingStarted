@@ -37,14 +37,14 @@ Last updated: 2026-06-12
 ------------------------------------------
 - NEIGHBORHOOD: dropped due to high cardinality, but it encodes strong location
   signal. Consider target-encoding (mean SALEPRICE per neighborhood) with proper
-  cross-validation folds to avoid data leakage.
+  cross-validation folds to avoid data leakage. ✅
 
 - CONDITION1/NOISE: dropped after label-encoding showed low correlation. A
   target-encoded version, or a simpler binary NEAR_ROAD flag, might recover signal.
 
 - MOSOLD / YRSOLD: dropped because individual correlations are weak, but a combined
   DATE_SOLD (e.g. YRSOLD + MOSOLD/12) might reveal seasonal or market-cycle trends.
-  
+
 - MSSUBCLASS: currently dropped; could be grouped into broader dwelling types
   (e.g. old/new single-family, townhouse) to reduce cardinality.
 
@@ -65,8 +65,8 @@ Last updated: 2026-06-12
 5. TARGET VARIABLE
 -------------------
 - SALEPRICE is not yet transformed. A log1p transform on the target is standard
-  practice for this competition and is expected by most evaluation metrics (RMSLE).
-- After modelling, predictions must be back-transformed with expm1.
+  practice for this competition and is expected by most evaluation metrics (RMSLE). ✅
+- After modelling, predictions must be back-transformed with expm1. 
 
 
 6. ENCODING STRATEGY
