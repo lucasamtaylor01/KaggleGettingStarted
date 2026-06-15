@@ -6,11 +6,11 @@ Last updated: 2026-06-12
 1. MISSING VALUE TREATMENT
 ---------------------------
 - The current strategy drops rows with low-missing columns and fills medium-missing
-  columns with the mean. Consider alternatives:
+  columns with the mean. Consider alternatives: 
     * KNN Imputation or IterativeImputer (MICE) for columns correlated with others,
-      which can preserve relationships better than a global mean fill.
+      which can preserve relationships better than a global mean fill. ✅
     * For columns like GARAGEYRBLT, a missing value likely means "no garage" — encode
-      as a separate category or a sentinel value (e.g. 0) rather than imputing a mean.
+      as a separate category or a sentinel value (e.g. 0) rather than imputing a mean. ✅
     * Validate that dropping rows for low-missing columns does not introduce selection
       bias (e.g. if missingness is correlated with price).
 
@@ -19,12 +19,16 @@ Last updated: 2026-06-12
 -----------------------
 - Total area: combine basement, 1st floor, and 2nd floor areas into a single
   TOTALLIVINGSF feature; high individual correlations suggest strong joint signal.
+
 - Age features: derive HOUSE_AGE = YRSOLD - YEARBUILT and REMODEL_AGE = YRSOLD -
   YEARREMODADD. These relative ages are more predictive than raw years.
 - Garage capacity proxy: GARAGECARS * GARAGEAREA can capture both size and count.
+
 - Bathroom index: FULLBATH + 0.5*HALFBATH + 0.5*BSMTFULLBATH as a weighted total.
+
 - Has-feature flags: binary columns for HASBASEMENT, HASGARAGE, HASFIREPLACE,
   HASPOOL derived from area/count columns being > 0.
+  
 - Porch total: sum OPENPORCHSF + SCREENPORCH + 3SSNPORCH into one TOTALPORCHSF.
 
 
