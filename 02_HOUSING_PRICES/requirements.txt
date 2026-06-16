@@ -2,4 +2,5 @@ pandas
 numpy
 matplotlib
 scikit-learn
-rfpimp
+kneed 
+xgboost

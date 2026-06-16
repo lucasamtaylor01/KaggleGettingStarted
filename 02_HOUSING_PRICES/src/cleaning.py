@@ -552,6 +552,7 @@ def clean_train(df):
 def clean_test(df, state):
     """Apply the cleaning pipeline to test data using the state derived from training."""
     df = normalize_strings(df)
+    test_ids = df['ID'].copy() if 'ID' in df.columns else None
     df, _, _ = handle_missing_values(df, imputer=state['imputer'], is_train=False)
     df = engineer_features(df)
 
@@ -571,5 +572,8 @@ def clean_test(df, state):
 
     df, _ = build_preprocessor(df, preprocessor=state['preprocessor'])
     df = df.reset_index(drop=True)
+
+    if test_ids is not None:
+        df.insert(0, 'ID', test_ids.values)
 
     return df
