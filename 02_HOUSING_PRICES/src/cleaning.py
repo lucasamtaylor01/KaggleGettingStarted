@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.impute import KNNImputer
 from sklearn import preprocessing
+from sklearn.compose import ColumnTransformer
 
 
 COLUMNS_QUAL_NOM = [
@@ -33,6 +34,19 @@ COLUMNS_QUAN_CONT = [
 ]
 
 TARGET = "SALEPRICE"
+
+SCALE_COLS = [
+    'NEIGHBORHOOD', 'OVERALLQUAL', 'EXTERQUAL', 'BSMTQUAL', 'HEATINGQC', 'GRLIVAREA',
+    'KITCHENQUAL', 'TOTRMSABVGRD', 'GARAGEYRBLT', 'GARAGEFINISH', 'ENCLOSEDPORCH',
+    'TOTALLIVINGSF', 'HOUSE_AGE', 'REMODEL_AGE', 'GARAGE_PROXY', 'BATHROOM_INDEX', 'TOTALPORCHSF',
+]
+
+BINARY_COLS = [
+    'HASBASEMENT', 'HASGARAGE', 'HASFIREPLACE', 'FOUNDATION_CBLOCK', 'FOUNDATION_PCONC',
+    'EXTERIOR1ST_METALSD', 'EXTERIOR1ST_OTHER', 'EXTERIOR1ST_PLYWOOD', 'EXTERIOR1ST_VINYLSD',
+    'EXTERIOR1ST_WD SDNG', 'GARAGETYPE_DETCHD', 'GARAGETYPE_OTHER', 'SALETYPE_CON',
+    'SALETYPE_NEW', 'SALETYPE_WD',
+]
 
 # Label encodings for nominal columns that require ordinal treatment
 _LABEL_ENCODEABLE_NOMINALS = {
@@ -464,26 +478,42 @@ def drop_low_corr_continuous(df, threshold=0.4, columns_to_drop=None):
     return df, columns_to_drop
 
 
-def standardize_features(df, scaler=None, columns=None):
+def build_preprocessor(df, preprocessor=None):
     """
-    Standardize continuous columns with StandardScaler.
-    Training (scaler=None): fit and transform. Test: transform only.
-    Returns (df, scaler, columns_scaled).
+    Build or apply a ColumnTransformer:
+    - StandardScaler on SCALE_COLS (continuous/ordinal)
+    - passthrough on BINARY_COLS (binary/dummy)
+    - remainder='drop' removes TARGET and ID automatically
+
+    Training (preprocessor=None): fit_transform. Test: transform only.
+    Returns (df_transformed, preprocessor).
     """
     df = df.copy()
 
-    if columns is None:
-        columns = [c for c in COLUMNS_QUAN_CONT + [TARGET] if c in df.columns]
+    y = df[TARGET].copy() if TARGET in df.columns else None
+    feature_df = df.drop(columns=[TARGET], errors='ignore')
 
-    cols_present = [c for c in columns if c in df.columns]
+    scale_present = [c for c in SCALE_COLS if c in feature_df.columns]
+    binary_present = [c for c in BINARY_COLS if c in feature_df.columns]
 
-    if scaler is None:
-        scaler = preprocessing.StandardScaler()
-        df[cols_present] = scaler.fit_transform(df[cols_present])
+    if preprocessor is None:
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('scale', preprocessing.StandardScaler(), scale_present),
+                ('binary', 'passthrough', binary_present),
+            ],
+            remainder='drop',
+        )
+        arr = preprocessor.fit_transform(feature_df)
     else:
-        df[cols_present] = scaler.transform(df[cols_present])
+        arr = preprocessor.transform(feature_df)
 
-    return df, scaler, cols_present
+    transformed = pd.DataFrame(arr, columns=scale_present + binary_present, index=feature_df.index)
+
+    if y is not None:
+        transformed[TARGET] = y.values
+
+    return transformed, preprocessor
 
 
 def clean_train(df):
@@ -513,8 +543,8 @@ def clean_train(df):
     df = remove_outliers(df)
     df, state['dropped_cont'] = drop_low_corr_continuous(df)
 
-    cont_cols = [c for c in COLUMNS_QUAN_CONT if c in df.columns]
-    df, state['scaler'], state['scaled_cols'] = standardize_features(df, columns=cont_cols)
+    df, state['preprocessor'] = build_preprocessor(df)
+    df = df.reset_index(drop=True)
 
     return df, state
 
@@ -539,7 +569,7 @@ def clean_test(df, state):
     df, _ = apply_log_transform(df, cols_to_log=state['cols_to_log'])
     df = df.drop(columns=state['dropped_cont'], errors='ignore')
 
-    test_cols = [c for c in state['scaled_cols'] if c in df.columns]
-    df, _, _ = standardize_features(df, scaler=state['scaler'], columns=test_cols)
+    df, _ = build_preprocessor(df, preprocessor=state['preprocessor'])
+    df = df.reset_index(drop=True)
 
     return df
