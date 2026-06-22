@@ -1,4 +1,5 @@
 pandas
 numpy
 matplotlib
-missingno
+plotly
+nbformat>=4.2.0
